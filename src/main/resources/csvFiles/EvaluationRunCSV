@@ -1,0 +1,4 @@
+model,dataset,promptVersion,parameters,metrics
+GPT-5,customer-support-v1,v1,"temperature=0.2;maxTokens=500","accuracy=0.91;hallucinationRate=0.03"
+GPT-4.1,customer-support-v1,v2,"temperature=0.3;maxTokens=300","accuracy=0.89;hallucinationRate=0.05"
+Claude-4,customer-support-v2,v1,"temperature=0.1;maxTokens=400","accuracy=0.94;hallucinationRate=0.02"
