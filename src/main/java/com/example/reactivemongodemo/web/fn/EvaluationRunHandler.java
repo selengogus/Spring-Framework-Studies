@@ -7,17 +7,36 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerWebInputException;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
+
+import org.springframework.validation.Validator;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 public class EvaluationRunHandler {
 
     private final EvaluationRunService evaluationRunService;
+    private final Validator validator;
+
+    private void validate(EvaluationRunDTO evaluationRunDTO) {
+        Errors errors = new BeanPropertyBindingResult(evaluationRunDTO, "evaluationRunDTO");
+        validator.validate(evaluationRunDTO, errors);
+
+        if (errors.hasErrors()) {
+            String msg = errors.getFieldErrors().stream()
+                    .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            throw new ServerWebInputException(msg);
+        }
+    }
 
     public Mono<ServerResponse> getEvalRuns(ServerRequest request) {
         return evaluationRunService.getEvalRuns()
@@ -38,6 +57,7 @@ public class EvaluationRunHandler {
     public Mono<ServerResponse> createEvalRun(ServerRequest request) {
         return request.bodyToMono(EvaluationRunDTO.class)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST)))
+                .doOnNext(this::validate)
                 .flatMap(evaluationRunService::saveEvalRun)
                 .flatMap(savedDto -> ServerResponse
                         .created(UriComponentsBuilder
@@ -52,6 +72,7 @@ public class EvaluationRunHandler {
     public Mono<ServerResponse> updateEvalRun(ServerRequest request) {
         return request.bodyToMono(EvaluationRunDTO.class)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST)))
+                .doOnNext(this::validate)
                 .flatMap(dto -> evaluationRunService.updateEvalRun(request.pathVariable("evalRunId"), dto))
                 .flatMap(_ -> ServerResponse.noContent().build())
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
