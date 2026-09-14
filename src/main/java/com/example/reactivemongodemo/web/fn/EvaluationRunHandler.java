@@ -4,10 +4,12 @@ import com.example.reactivemongodemo.model.EvaluationRunDTO;
 import com.example.reactivemongodemo.service.EvaluationRunService;
 import com.mongodb.internal.connection.Server;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
@@ -18,19 +20,24 @@ public class EvaluationRunHandler {
     private final EvaluationRunService evaluationRunService;
 
     public Mono<ServerResponse> getEvalRuns(ServerRequest request) {
-        return ServerResponse.ok().body(
-                evaluationRunService.getEvalRuns(), EvaluationRunDTO.class
-        );
+        return evaluationRunService.getEvalRuns()
+                .collectList()
+                .flatMap(list -> list.isEmpty() ?
+                        Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND))
+                        : ServerResponse.ok().bodyValue(list));
     }
 
     public Mono<ServerResponse> getEvalRun(ServerRequest request) {
-        return ServerResponse.ok().body(
-                evaluationRunService.getEvalRun(request.pathVariable("evalRunId")), EvaluationRunDTO.class
-        );
+        return evaluationRunService.getEvalRun(
+                request.pathVariable("evalRunId")
+        )
+                .flatMap(dto -> ServerResponse.ok().body(dto, EvaluationRunDTO.class))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 
     public Mono<ServerResponse> createEvalRun(ServerRequest request) {
         return request.bodyToMono(EvaluationRunDTO.class)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST)))
                 .flatMap(evaluationRunService::saveEvalRun)
                 .flatMap(savedDto -> ServerResponse
                         .created(UriComponentsBuilder
@@ -38,18 +45,22 @@ public class EvaluationRunHandler {
                                 .buildAndExpand(savedDto.getId())
                                 .toUri())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(savedDto));
+                        .bodyValue(savedDto)
+                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND))));
     }
 
     public Mono<ServerResponse> updateEvalRun(ServerRequest request) {
         return request.bodyToMono(EvaluationRunDTO.class)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST)))
                 .flatMap(dto -> evaluationRunService.updateEvalRun(request.pathVariable("evalRunId"), dto))
-                .then(ServerResponse.noContent().build());
+                .flatMap(_ -> ServerResponse.noContent().build())
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
 
     }
 
     public Mono<ServerResponse> deleteEvalRun(ServerRequest request) {
         return evaluationRunService.deleteEvalRun(request.pathVariable("evalRunId"))
-                .then(ServerResponse.noContent().build());
+                .flatMap(_ -> ServerResponse.noContent().build())
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 }

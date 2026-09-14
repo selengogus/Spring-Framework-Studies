@@ -1,6 +1,9 @@
 package com.example.reactivemongodemo.web.fn;
 
 import com.example.reactivemongodemo.model.EvaluationRunDTO;
+import com.example.reactivemongodemo.repository.EvaluationRunRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,12 +16,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
-
 import static com.example.reactivemongodemo.testUtil.EvaluationRunTestUtils.getTestEvalRunDTO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.testcontainers.shaded.org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.Matchers.greaterThan;
 
 @Testcontainers
 @SpringBootTest
@@ -36,27 +36,58 @@ public class EvalRunEndpointTest {
     @Autowired
     private WebTestClient webTestClient;
 
-    @Test
-    public void testGetEvalRuns() {
-        webTestClient.get()
-                .uri(EVALRUN_PATH)
-                .exchange()
-                .expectStatus().isOk()
-                .expectHeader().valueEquals("Content-type", "application/json")
-                .expectBodyList(EvaluationRunDTO.class)
-                .value(runs -> assertThat(runs).hasSizeGreaterThan(1));
+    @Nested
+    class DataExists {
+        @Test
+        public void testGetEvalRuns() {
+            webTestClient.get()
+                    .uri(EVALRUN_PATH)
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectHeader().valueEquals("Content-type", "application/json")
+                    .expectBodyList(EvaluationRunDTO.class)
+                    .value(runs -> assertThat(runs).hasSizeGreaterThan(1));
+        }
+
+        @Test
+        public void testCreateEvalRun() {
+            webTestClient.post()
+                    .uri(EVALRUN_PATH)
+                    .body(Mono.just(getTestEvalRunDTO()), EvaluationRunDTO.class)
+                    .exchange()
+                    .expectStatus().isCreated()
+                    .expectHeader().valueEquals("Content-type", "application/json")
+                    .expectBody(EvaluationRunDTO.class)
+                    .value(run -> assertThat(run).isNotNull());
+        }
     }
 
-    @Test
-    public void testCreateEvalRun() {
-        webTestClient.post()
-                .uri(EVALRUN_PATH)
-                .body(Mono.just(getTestEvalRunDTO()), EvaluationRunDTO.class)
-                .exchange()
-                .expectStatus().isCreated()
-                .expectHeader().valueEquals("Content-type", "application/json")
-                .expectBody(EvaluationRunDTO.class)
-                .value(run -> assertThat(run).isNotNull());
-    }
+    @Nested
+    class DataNotFound {
 
+        @Autowired
+        private EvaluationRunRepository evaluationRunRepository;
+
+        @BeforeEach
+        void clearData() {
+            evaluationRunRepository.deleteAll().block();
+        }
+
+        @Test
+        void testGetEvalRunsReturnsNotFound() {
+            webTestClient.get()
+                    .uri(EVALRUN_PATH)
+                    .exchange()
+                    .expectStatus().isNotFound();
+        }
+
+        @Test
+        void testCreateEvalRunReturnsBadRequest() {
+            webTestClient.post()
+                    .uri(EVALRUN_PATH)
+                    .body(Mono.empty(), EvaluationRunDTO.class)
+                    .exchange()
+                    .expectStatus().isBadRequest();
+        }
+    }
 }

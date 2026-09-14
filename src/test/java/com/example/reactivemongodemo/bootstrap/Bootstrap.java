@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.sql.SQLOutput;
+
 @Component
 @RequiredArgsConstructor
 @Profile("test")
@@ -19,10 +21,9 @@ public class Bootstrap implements CommandLineRunner {
     public void run(String... args) throws Exception {
         csvService.importCsv(new ClassPathResource("csvFiles/EvaluationRunCSV")
                 .getInputStream())
-                .subscribe(
-                        dto -> {},
-                        err -> System.out.println("Error: " + err),
-                        () -> System.out.println("Bootstrap data load completed")
-                );
+                .doOnError(err -> System.out.println("Error: " + err.getMessage()))
+                .doOnComplete(() -> System.out.println("Test Bootstrap completed."))
+                .blockLast();
+
     }
 }
