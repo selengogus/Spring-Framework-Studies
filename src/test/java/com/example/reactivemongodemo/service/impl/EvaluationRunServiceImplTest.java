@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.example.reactivemongodemo.testUtil.EvaluationRunTestUtils.getTestEvalRunDTO;
 
 @Testcontainers
 @SpringBootTest
@@ -120,22 +121,6 @@ class EvaluationRunServiceImplTest {
                     return true;
                 })
                 .verifyComplete();
-    }
-
-    private EvaluationRunDTO getTestEvalRunDTO() {
-        return EvaluationRunDTO.builder()
-                .model("This is a test GPT-5")
-                .dataset("customer-support-v1")
-                .promptVersion("v1")
-                .parameters(Map.of(
-                        "temperature", 0.2,
-                        "maxTokens", 500.0
-                ))
-                .metrics(Map.of(
-                        "accuracy", 0.91,
-                        "hallucinationRate", 0.03
-                ))
-                .build();
     }
 
     private EvaluationRun getSavedEvalRun() {

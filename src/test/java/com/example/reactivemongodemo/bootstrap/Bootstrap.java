@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-@Profile("init")
+@Profile("test")
 public class Bootstrap implements CommandLineRunner {
 
     private final EvaluationRunCsvService<EvaluationRunDTO> csvService;
