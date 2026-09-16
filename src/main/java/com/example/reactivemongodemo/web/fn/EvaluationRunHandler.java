@@ -39,7 +39,14 @@ public class EvaluationRunHandler {
     }
 
     public Mono<ServerResponse> getEvalRuns(ServerRequest request) {
-        return evaluationRunService.getEvalRuns()
+
+        String model = request.queryParam("model").orElse(null);
+        String dataset = request.queryParam("dataset").orElse(null);
+        Double minAccuracy = request.queryParam("minAccuracy")
+                .map(Double::parseDouble)
+                .orElse(null);
+
+        return evaluationRunService.getEvalRuns(model, dataset, minAccuracy)
                 .collectList()
                 .flatMap(list -> list.isEmpty() ?
                         Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND))

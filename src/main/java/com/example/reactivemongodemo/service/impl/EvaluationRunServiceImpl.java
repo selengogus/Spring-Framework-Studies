@@ -1,9 +1,13 @@
 package com.example.reactivemongodemo.service.impl;
 
+import com.example.reactivemongodemo.domain.EvaluationRun;
 import com.example.reactivemongodemo.mapper.EvaluationRunMapper;
 import com.example.reactivemongodemo.model.EvaluationRunDTO;
 import com.example.reactivemongodemo.repository.EvaluationRunRepository;
 import com.example.reactivemongodemo.service.EvaluationRunService;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -12,10 +16,12 @@ import reactor.core.publisher.Mono;
 public class EvaluationRunServiceImpl implements EvaluationRunService {
 
     private final EvaluationRunRepository evaluationRunRepository;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
     private final EvaluationRunMapper evaluationRunMapper;
 
-    public EvaluationRunServiceImpl(EvaluationRunRepository evaluationRunRepository, EvaluationRunMapper evaluationRunMapper) {
+    public EvaluationRunServiceImpl(EvaluationRunRepository evaluationRunRepository, ReactiveMongoTemplate reactiveMongoTemplate, EvaluationRunMapper evaluationRunMapper) {
         this.evaluationRunRepository = evaluationRunRepository;
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
         this.evaluationRunMapper = evaluationRunMapper;
     }
 
@@ -43,7 +49,20 @@ public class EvaluationRunServiceImpl implements EvaluationRunService {
 
     @Override
     public Flux<EvaluationRunDTO> getEvalRuns() {
-        return evaluationRunRepository.findAll().map(evaluationRunMapper::evalRuntoDTO);
+        return getEvalRuns(null, null, null);
+    }
+
+    @Override
+    public Flux<EvaluationRunDTO> getEvalRuns(String model, String dataset, Double minAccuracy) {
+
+        Query query = new Query();
+
+        if(model != null ) query.addCriteria(Criteria.where("model").is(model));
+        if(dataset != null ) query.addCriteria(Criteria.where("dataset").is(dataset));
+        if(minAccuracy != null ) query.addCriteria(Criteria.where("metrics.accuracy").gte(minAccuracy));
+
+        return reactiveMongoTemplate.find(query, EvaluationRun.class)
+                .map(evaluationRunMapper::evalRuntoDTO);
     }
 
     @Override
