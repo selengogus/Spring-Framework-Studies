@@ -52,8 +52,13 @@ public class EvaluationRunServiceImpl implements EvaluationRunService {
     }
 
     @Override
-    public Mono<Void> deleteEvalRun(String id) {
-        return evaluationRunRepository.deleteById(id);
+    public Mono<Boolean> deleteEvalRun(String id) {
+
+        return evaluationRunRepository.existsById(id)
+                .flatMap(exists ->
+                        exists ?
+                        evaluationRunRepository.deleteById(id).thenReturn(true)
+                        : Mono.just(false));
     }
 
     @Override

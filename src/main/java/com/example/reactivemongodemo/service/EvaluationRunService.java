@@ -10,7 +10,7 @@ public interface EvaluationRunService {
     Mono<EvaluationRunDTO> updateEvalRun(String id, EvaluationRunDTO dto);
     Flux<EvaluationRunDTO> getEvalRuns();
     Mono<EvaluationRunDTO> getEvalRun(String id);
-    Mono<Void> deleteEvalRun(String id);
+    Mono<Boolean> deleteEvalRun(String id);
 
     Flux<EvaluationRunDTO> getByEvaluationRunModel(String model);
 

@@ -50,7 +50,7 @@ public class EvaluationRunHandler {
         return evaluationRunService.getEvalRun(
                 request.pathVariable("evalRunId")
         )
-                .flatMap(dto -> ServerResponse.ok().body(dto, EvaluationRunDTO.class))
+                .flatMap(dto -> ServerResponse.ok().bodyValue(dto))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 
@@ -81,7 +81,9 @@ public class EvaluationRunHandler {
 
     public Mono<ServerResponse> deleteEvalRun(ServerRequest request) {
         return evaluationRunService.deleteEvalRun(request.pathVariable("evalRunId"))
-                .flatMap(_ -> ServerResponse.noContent().build())
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
+                .flatMap(deleted ->
+                        deleted ?
+                                ServerResponse.noContent().build()
+                        : Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)));
     }
 }
