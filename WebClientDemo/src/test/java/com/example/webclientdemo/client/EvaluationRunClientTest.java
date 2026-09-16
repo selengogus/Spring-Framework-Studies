@@ -20,4 +20,24 @@ public class EvaluationRunClientTest {
                 })
                 .verifyComplete();
     }
+
+    @Test
+    public void testGetEvalRunMap() {
+        StepVerifier.create(evaluationRunClient.getEvalRunMap())
+                .thenConsumeWhile(run -> {
+                    System.out.println(run);
+                    return true;
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    public void testGetEvalJsonNode() {
+        StepVerifier.create(evaluationRunClient.getEvalRunJsonNode())
+                .thenConsumeWhile(run -> {
+                    System.out.println(run.toPrettyString());
+                    return true;
+                })
+                .verifyComplete();
+    }
 }
