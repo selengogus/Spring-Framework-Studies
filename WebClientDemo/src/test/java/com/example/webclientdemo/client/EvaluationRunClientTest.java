@@ -32,10 +32,20 @@ public class EvaluationRunClientTest {
     }
 
     @Test
-    public void testGetEvalJsonNode() {
+    public void testGetEvalRunJsonNode() {
         StepVerifier.create(evaluationRunClient.getEvalRunJsonNode())
                 .thenConsumeWhile(run -> {
                     System.out.println(run.toPrettyString());
+                    return true;
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    public void testGetEvalRunDtos() {
+        StepVerifier.create(evaluationRunClient.getEvalRunDtos())
+                .thenConsumeWhile(run -> {
+                    System.out.println(run);
                     return true;
                 })
                 .verifyComplete();
