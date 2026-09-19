@@ -4,6 +4,7 @@ import com.example.webclientdemo.model.EvaluationRunDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import tools.jackson.databind.JsonNode;
 
 import java.util.Map;
@@ -14,6 +15,7 @@ public class EvaluationRunClientImpl implements EvaluationRunClient {
     private final WebClient webClient;
 
     private final String EVALRUN_PATH = "/api/v3/evaluationRun";
+    private final String EVALRUN_PATH_BY_ID = EVALRUN_PATH + "/{evalRunId}";
 
     public EvaluationRunClientImpl(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.build();
@@ -49,5 +51,34 @@ public class EvaluationRunClientImpl implements EvaluationRunClient {
                 .uri(EVALRUN_PATH)
                 .retrieve()
                 .bodyToFlux(Map.class);
+    }
+
+    @Override
+    public Mono<EvaluationRunDto> getById(String id) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder.path(EVALRUN_PATH_BY_ID).build(id))
+                .retrieve()
+                .bodyToMono(EvaluationRunDto.class);
+    }
+
+    @Override
+    public Flux<EvaluationRunDto> getByModel(String model) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder.path(EVALRUN_PATH)
+                        .queryParam("model", model)
+                        .build())
+                .retrieve()
+                .bodyToFlux(EvaluationRunDto.class);
+    }
+
+    @Override
+    public Flux<EvaluationRunDto> getByModelDataset(String model, String dataset) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder.path(EVALRUN_PATH)
+                        .queryParam("model", model)
+                        .queryParam("dataset", dataset)
+                        .build())
+                .retrieve()
+                .bodyToFlux(EvaluationRunDto.class);
     }
 }
