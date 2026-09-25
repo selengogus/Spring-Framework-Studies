@@ -15,4 +15,7 @@ public interface EvaluationRunClient {
     Mono<EvaluationRunDto> getById(String id);
     Flux<EvaluationRunDto> getByModel(String model);
     Flux<EvaluationRunDto> getByModelDataset(String model, String dataset);
+    Mono<EvaluationRunDto> createEvalRun(EvaluationRunDto evalRunDto);
+    Mono<Void> updateEvalRun(String id, EvaluationRunDto evalRunDto);
+    Mono<Boolean> deleteEvalRun(String id);
 }

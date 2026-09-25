@@ -1,12 +1,15 @@
 package com.example.webclientdemo.client;
 
-import net.minidev.json.JSONUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import reactor.netty.udp.UdpOutbound;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -93,5 +96,46 @@ public class EvaluationRunClientTest {
                     return true;
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    public void testCreateEvalRun() {
+        StepVerifier.create(evaluationRunClient.getEvalRunDtos()
+                        .next()
+                .flatMap(dto -> evaluationRunClient.createEvalRun(dto))
+                        .flatMap(created -> evaluationRunClient.getById(created.getId())))
+                .assertNext(fetchedDto -> {
+                    assertThat(fetchedDto).isNotNull();
+                    assertThat(fetchedDto.getId()).isNotNull();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    public void testUpdateEvalRun() {
+        StepVerifier.create(evaluationRunClient.getEvalRunDtos()
+                .next()
+                .flatMap(dto -> {
+                    dto.setModel("this is a test model");
+                    return Mono.just(dto);
+                })
+                .flatMap(newDto -> evaluationRunClient.updateEvalRun(newDto.getId(), newDto)))
+                .verifyComplete();
+    }
+
+    @Test
+    public void testDeleteEvalRun() {
+        StepVerifier.create(
+                        evaluationRunClient.getEvalRunDtos()
+                                .next()
+                                .flatMap(dto ->
+                                        evaluationRunClient.deleteEvalRun(dto.getId())
+                                                .thenReturn(dto.getId())
+                                )
+                                .flatMap(id -> evaluationRunClient.getById(id))
+                )
+                .expectError(WebClientResponseException.NotFound.class)
+                .verify();
+
     }
 }

@@ -81,4 +81,30 @@ public class EvaluationRunClientImpl implements EvaluationRunClient {
                 .retrieve()
                 .bodyToFlux(EvaluationRunDto.class);
     }
+
+    @Override
+    public Mono<EvaluationRunDto> createEvalRun(EvaluationRunDto evalRunDto) {
+        return webClient.post()
+                .uri(uriBuilder -> uriBuilder.path(EVALRUN_PATH).build())
+                .bodyValue(evalRunDto)
+                .retrieve()
+                .bodyToMono(EvaluationRunDto.class);
+    }
+
+    @Override
+    public Mono<Void> updateEvalRun(String id, EvaluationRunDto evalRunDto) {
+        return webClient.put()
+                .uri(uriBuilder -> uriBuilder.path(EVALRUN_PATH_BY_ID).build(id))
+                .bodyValue(evalRunDto)
+                .retrieve()
+                .bodyToMono(Void.class);
+    }
+
+    @Override
+    public Mono<Boolean> deleteEvalRun(String id) {
+        return webClient.delete()
+                .uri(uriBuilder -> uriBuilder.path(EVALRUN_PATH_BY_ID).build(id))
+                .retrieve()
+                .bodyToMono(Boolean.class);
+    }
 }
