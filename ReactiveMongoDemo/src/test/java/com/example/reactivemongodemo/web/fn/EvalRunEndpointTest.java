@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.MongoDBContainer;
@@ -18,11 +19,11 @@ import reactor.core.publisher.Mono;
 
 import static com.example.reactivemongodemo.testUtil.EvaluationRunTestUtils.getTestEvalRunDTO;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.testcontainers.shaded.org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.springSecurity;
 
 @Testcontainers
 @SpringBootTest
-@AutoConfigureWebTestClient
 @ActiveProfiles("test")
 public class EvalRunEndpointTest {
 
@@ -33,14 +34,27 @@ public class EvalRunEndpointTest {
     @Container
     private static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:7");
 
-    @Autowired
     private WebTestClient webTestClient;
+
+    @Autowired
+    private ApplicationContext context;
+
+    @BeforeEach
+    void setUp() {
+        webTestClient = WebTestClient
+                .bindToApplicationContext(context)
+                .apply(springSecurity())
+                .configureClient()
+                .build()
+                .mutateWith(mockJwt());
+    }
 
     @Nested
     class DataExists {
         @Test
         public void testGetEvalRuns() {
-            webTestClient.get()
+            webTestClient
+                    .get()
                     .uri(EVALRUN_PATH)
                     .exchange()
                     .expectStatus().isOk()
