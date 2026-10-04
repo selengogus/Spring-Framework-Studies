@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: ReactiveMongoDemo
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/v3/**
