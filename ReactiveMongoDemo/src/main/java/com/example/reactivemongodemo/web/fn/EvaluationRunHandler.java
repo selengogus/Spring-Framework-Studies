@@ -2,7 +2,6 @@ package com.example.reactivemongodemo.web.fn;
 
 import com.example.reactivemongodemo.model.EvaluationRunDTO;
 import com.example.reactivemongodemo.service.EvaluationRunService;
-import com.mongodb.internal.connection.Server;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,6 +16,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import org.springframework.validation.Validator;
+
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 @Component
@@ -25,6 +27,11 @@ public class EvaluationRunHandler {
 
     private final EvaluationRunService evaluationRunService;
     private final Validator validator;
+
+    private static final String P_MODEL = "model";
+    private static final String P_DATASET = "dataset";
+    private static final String P_MIN_ACCURACY = "minAccuracy";
+    private static final Set<String> ALLOWED_QUERY_PARAMS = Set.of(P_MODEL, P_DATASET, P_MIN_ACCURACY);
 
     private void validate(EvaluationRunDTO evaluationRunDTO) {
         Errors errors = new BeanPropertyBindingResult(evaluationRunDTO, "evaluationRunDTO");
@@ -38,11 +45,19 @@ public class EvaluationRunHandler {
         }
     }
 
-    public Mono<ServerResponse> getEvalRuns(ServerRequest request) {
+    private void rejectUnknownQueryParams(ServerRequest request) {
+        Set<String> unknownParams = new TreeSet<>(request.queryParams().keySet());
+        unknownParams.removeAll(ALLOWED_QUERY_PARAMS);
 
-        String model = request.queryParam("model").orElse(null);
-        String dataset = request.queryParam("dataset").orElse(null);
-        Double minAccuracy = request.queryParam("minAccuracy")
+        if(!unknownParams.isEmpty()) throw new ServerWebInputException("Unsupported query parameter(s): " + unknownParams);
+    }
+
+    public Mono<ServerResponse> getEvalRuns(ServerRequest request) {
+        rejectUnknownQueryParams(request);
+
+        String model = request.queryParam(P_MODEL).orElse(null);
+        String dataset = request.queryParam(P_DATASET).orElse(null);
+        Double minAccuracy = request.queryParam(P_MIN_ACCURACY)
                 .map(Double::parseDouble)
                 .orElse(null);
 
