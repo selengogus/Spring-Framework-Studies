@@ -2,7 +2,9 @@ package com.example.reactivemongodemo.web.fn;
 
 import com.example.reactivemongodemo.model.EvaluationRunDTO;
 import com.example.reactivemongodemo.service.EvaluationRunService;
+import com.example.reactivemongodemo.web.ApiPaths;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+@Profile("router")
 @Component
 @RequiredArgsConstructor
 public class EvaluationRunHandler {
@@ -83,7 +86,7 @@ public class EvaluationRunHandler {
                 .flatMap(evaluationRunService::saveEvalRun)
                 .flatMap(savedDto -> ServerResponse
                         .created(UriComponentsBuilder
-                                .fromPath(EvaluationRunRouterConfig.EVALRUN_PATH_BY_ID)
+                                .fromPath(ApiPaths.EVALRUN_BY_ID)
                                 .buildAndExpand(savedDto.getId())
                                 .toUri())
                         .contentType(MediaType.APPLICATION_JSON)
