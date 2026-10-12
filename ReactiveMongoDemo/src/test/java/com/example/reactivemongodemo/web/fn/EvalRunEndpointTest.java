@@ -2,6 +2,7 @@ package com.example.reactivemongodemo.web.fn;
 
 import com.example.reactivemongodemo.model.EvaluationRunDTO;
 import com.example.reactivemongodemo.repository.EvaluationRunRepository;
+import com.example.reactivemongodemo.web.ApiPaths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,9 +27,6 @@ import static org.springframework.security.test.web.reactive.server.SecurityMock
 @SpringBootTest
 @ActiveProfiles("test")
 public class EvalRunEndpointTest {
-
-    public static final String EVALRUN_PATH = "/api/v3/evaluationRun";
-    public static final String EVALRUN_PATH_BY_ID = EVALRUN_PATH + "/{evalRunId}";
 
     @ServiceConnection
     @Container
@@ -55,7 +53,7 @@ public class EvalRunEndpointTest {
         public void testGetEvalRuns() {
             webTestClient
                     .get()
-                    .uri(EVALRUN_PATH)
+                    .uri(ApiPaths.EVALRUN)
                     .exchange()
                     .expectStatus().isOk()
                     .expectHeader().valueEquals("Content-type", "application/json")
@@ -66,7 +64,7 @@ public class EvalRunEndpointTest {
         @Test
         public void testCreateEvalRun() {
             webTestClient.post()
-                    .uri(EVALRUN_PATH)
+                    .uri(ApiPaths.EVALRUN)
                     .body(Mono.just(getTestEvalRunDTO()), EvaluationRunDTO.class)
                     .exchange()
                     .expectStatus().isCreated()
@@ -90,7 +88,7 @@ public class EvalRunEndpointTest {
         @Test
         void testGetEvalRunsReturnsNotFound() {
             webTestClient.get()
-                    .uri(EVALRUN_PATH)
+                    .uri(ApiPaths.EVALRUN)
                     .exchange()
                     .expectStatus().isNotFound();
         }
@@ -98,7 +96,7 @@ public class EvalRunEndpointTest {
         @Test
         void testCreateEvalRunReturnsBadRequest() {
             webTestClient.post()
-                    .uri(EVALRUN_PATH)
+                    .uri(ApiPaths.EVALRUN)
                     .body(Mono.empty(), EvaluationRunDTO.class)
                     .exchange()
                     .expectStatus().isBadRequest();

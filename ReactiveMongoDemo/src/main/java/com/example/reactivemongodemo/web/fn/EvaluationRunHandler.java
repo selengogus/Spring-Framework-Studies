@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-@Profile("router")
+@Profile("!controller")
 @Component
 @RequiredArgsConstructor
 public class EvaluationRunHandler {

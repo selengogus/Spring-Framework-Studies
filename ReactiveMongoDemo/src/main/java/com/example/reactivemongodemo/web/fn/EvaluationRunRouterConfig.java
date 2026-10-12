@@ -12,7 +12,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
-@Profile("router")
+@Profile("!controller")
 @Configuration
 @RequiredArgsConstructor
 public class EvaluationRunRouterConfig {
